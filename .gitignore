@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.venv/
+
+# Model Weights
+*.pt
+*.pth
+*.onnx
+
+# Cache
+hf_cache/
+pip_cache/
+temp/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+static/processed/

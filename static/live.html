@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Camera — PDX AI</title>
+    <meta name="description" content="PDX AI — Real-time webcam crowd and face mask detection stream.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="scanlines"></div>
+
+<div class="app-shell">
+
+    <!-- ═══════════ SIDEBAR ═══════════ -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="eyeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00F5FF"/>
+                            <stop offset="100%" stop-color="#7C3AED"/>
+                        </linearGradient>
+                        <linearGradient id="eyeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00F5FF" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.3"/>
+                        </linearGradient>
+                        <filter id="eyeGlow">
+                            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="pupilGlow">
+                            <feGaussianBlur stdDeviation="1" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+                    <circle cx="20" cy="20" r="18" stroke="url(#eyeGrad1)" stroke-width="1.2" opacity="0.4"/>
+                    <g class="eye-inner" style="transform-box:fill-box;transform-origin:center;animation:eyeBlinkDouble 5s ease-in-out infinite;">
+                        <path d="M4 20 C9 11, 31 11, 36 20 C31 29, 9 29, 4 20 Z" fill="url(#eyeGrad2)" stroke="url(#eyeGrad1)" stroke-width="1.2"/>
+                        <circle cx="20" cy="20" r="7" stroke="url(#eyeGrad1)" stroke-width="1.4" fill="rgba(0,212,255,0.07)" filter="url(#eyeGlow)"/>
+                        <circle cx="20" cy="20" r="5" stroke="url(#eyeGrad1)" stroke-width="0.8" fill="none" opacity="0.6"/>
+                        <circle cx="20" cy="20" r="3" fill="url(#eyeGrad1)" filter="url(#pupilGlow)"/>
+                        <circle cx="22" cy="18" r="1.2" fill="white" opacity="0.85"/>
+                        <circle cx="18.5" cy="21.5" r="0.5" fill="white" opacity="0.4"/>
+                    </g>
+                    <line x1="4" y1="20" x2="8" y2="20" stroke="#00F5FF" stroke-width="1.2" opacity="0.7"/>
+                    <line x1="32" y1="20" x2="36" y2="20" stroke="#00F5FF" stroke-width="1.2" opacity="0.7"/>
+                    <line x1="14" y1="11.5" x2="14" y2="13.5" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="20" y1="10" x2="20" y2="12" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="26" y1="11.5" x2="26" y2="13.5" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <div class="brand-name">PDX AI</div>
+                <div class="brand-sub">Crowd &amp; Mask Detection</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-group-label">MAIN MODULES</div>
+            <a class="nav-item" href="index.html">
+                <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg></div>
+                <span class="nav-label">Dashboard</span><div class="nav-indicator"></div>
+            </a>
+            <a class="nav-item" href="live.html">
+                <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+                <span class="nav-label">Live Camera</span>
+                <span class="nav-live-badge">LIVE</span>
+                <div class="nav-indicator"></div>
+            </a>
+            <a class="nav-item" href="upload.html">
+                <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                <span class="nav-label">Upload & Scan</span><div class="nav-indicator"></div>
+            </a>
+            <a class="nav-item" href="analytics.html">
+                <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                <span class="nav-label">Deep Analytics</span><div class="nav-indicator"></div>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="server-status-card">
+                <div class="server-status-top">
+                    <div class="status-orb" id="status-orb"></div>
+                    <span class="status-label" id="api-status-text">Connecting...</span>
+                </div>
+                <div class="status-bar-wrap"><div class="status-bar-fill"></div></div>
+            </div>
+            <div class="created-by-badge">
+                <span class="created-by-dot"></span>
+                <span class="created-by-text">Created by <strong>Pankaj Dhiman</strong></span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ═══════════ MAIN ═══════════ -->
+    <main class="main-area">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="page-title">Real-Time Webcam Analysis</h1>
+                <div class="breadcrumb">Live Camera · AI detection pipeline</div>
+            </div>
+            <div class="topbar-right">
+                <div class="live-chip" id="live-chip" style="opacity:0.4"><span class="chip-dot"></span><span>STREAM OFFLINE</span></div>
+                <div class="time-display" id="time-display">--:--:--</div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="live-grid">
+
+                <!-- VIDEO FEED COLUMN -->
+                <div class="feed-col">
+                    <div class="glass-card feed-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="live-dot" id="live-dot"></span>
+                                <h3>Webcam Live Stream</h3>
+                            </div>
+                            <div class="stream-meta">
+                                <span class="meta-chip" id="live-fps">FPS: --</span>
+                                <span class="meta-chip" id="live-latency">Latency: -- ms</span>
+                            </div>
+                        </div>
+                        <div class="video-wrap" id="video-wrap">
+                            <video id="webcam-video" autoplay playsinline style="display:none;"></video>
+                            <canvas id="webcam-canvas" style="display:none;"></canvas>
+                            <div class="feed-offline" id="feed-placeholder">
+                                <div class="offline-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="56" height="56">
+                                        <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+                                    </svg>
+                                    <div class="scan-ring"></div>
+                                </div>
+                                <p class="offline-text">Camera feed offline</p>
+                                <p class="offline-sub">Select a source and press Start</p>
+                                <button class="btn btn-primary glow-btn" id="btn-start-camera">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                                    Start Live Stream
+                                </button>
+                            </div>
+                            <div class="scan-overlay" id="scan-overlay" style="display:none;"></div>
+                            <div class="bracket tl"></div><div class="bracket tr"></div>
+                            <div class="bracket bl"></div><div class="bracket br"></div>
+                        </div>
+                        <div class="feed-controls">
+                            <div>
+                                <label class="field-label" for="camera-select">VIDEO INPUT</label>
+                                <select id="camera-select" class="neo-select"><option value="">Loading...</option></select>
+                            </div>
+                            <div class="control-btns">
+                                <button class="btn btn-danger" id="btn-stop-camera" disabled>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                                    Stop Feed
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SESSION REPORT -->
+                    <div class="glass-card session-card" id="live-report-panel" style="display:none;">
+                        <div class="card-header">
+                            <div class="card-title-group"><div class="card-dot cyan"></div><h3>Session Safety Audit</h3></div>
+                            <button class="btn btn-sm btn-success" id="btn-download-pdf-report">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Export PDF
+                            </button>
+                        </div>
+                        <div class="session-kpis">
+                            <div class="session-stat">
+                                <div class="ss-val" id="report-val-peak-crowd" style="color:var(--cyan)">0</div>
+                                <div class="ss-lbl">Peak Crowd</div>
+                            </div>
+                            <div class="session-stat">
+                                <div class="ss-val" id="report-val-avg-compliance" style="color:var(--green)">100%</div>
+                                <div class="ss-lbl">Avg Compliance</div>
+                            </div>
+                            <div class="session-stat">
+                                <div class="ss-val" id="report-val-total-violations" style="color:var(--red)">0</div>
+                                <div class="ss-lbl">Violations</div>
+                            </div>
+                            <div class="session-stat">
+                                <div class="ss-val" id="report-val-status" style="color:var(--green)">SAFE</div>
+                                <div class="ss-lbl">Severity</div>
+                            </div>
+                        </div>
+                        <div class="neo-table-wrap" style="max-height:160px;">
+                            <table class="neo-table">
+                                <thead><tr><th>Time</th><th>People</th><th>Masks</th><th>Compliance</th><th>Alert</th></tr></thead>
+                                <tbody id="report-timeline-body">
+                                    <tr><td colspan="5" class="empty-row">Start camera to compile logs...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONFIG COLUMN -->
+                <div class="config-col">
+                    <div class="glass-card config-card">
+                        <div class="card-header">
+                            <div class="card-title-group"><div class="card-dot amber"></div><h3>Detection Parameters</h3></div>
+                        </div>
+                        <div class="param-list">
+                            <div class="param-row">
+                                <div class="param-label-row">
+                                    <span class="param-name">Confidence Threshold</span>
+                                    <span class="param-val cyan" id="val-conf-threshold">25%</span>
+                                </div>
+                                <input type="range" class="neo-slider" id="slider-conf" min="10" max="90" value="25">
+                                <p class="param-hint">Lower = more sensitive, higher = fewer false positives</p>
+                            </div>
+                            <div class="param-divider"></div>
+                            <div class="param-row">
+                                <div class="param-label-row">
+                                    <span class="param-name">Mask Compliance Target</span>
+                                    <span class="param-val green" id="val-compliance-threshold">75%</span>
+                                </div>
+                                <input type="range" class="neo-slider" id="slider-compliance" min="50" max="95" value="75">
+                                <p class="param-hint">Alert triggers below this compliance rate</p>
+                            </div>
+                            <div class="param-divider"></div>
+                            <div class="param-row">
+                                <div class="param-label-row">
+                                    <span class="param-name">Max Crowd Limit</span>
+                                    <span class="param-val amber" id="val-crowd-limit">15</span>
+                                </div>
+                                <input type="range" class="neo-slider" id="slider-crowd" min="5" max="100" value="15">
+                                <p class="param-hint">Alarm fires when crowd exceeds this number</p>
+                            </div>
+                        </div>
+                        <div class="card-section-title">Overlay Options</div>
+                        <div class="toggle-list">
+                            <label class="neo-toggle">
+                                <input type="checkbox" id="chk-show-boxes" checked>
+                                <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                                <span>Bounding Boxes</span>
+                            </label>
+                            <label class="neo-toggle">
+                                <input type="checkbox" id="chk-show-labels" checked>
+                                <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                                <span>Class Labels</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- LIVE STATS MINI CARDS -->
+                    <div class="glass-card" style="padding:1.2rem;">
+                        <div class="card-header" style="padding:0 0 0.8rem;">
+                            <div class="card-title-group"><div class="card-dot red"></div><h3>Live Detections</h3></div>
+                        </div>
+                        <div class="live-stats-mini">
+                            <div class="lsm-item">
+                                <div class="lsm-val" id="lsm-crowd" style="color:var(--cyan)">0</div>
+                                <div class="lsm-lbl">People</div>
+                            </div>
+                            <div class="lsm-item">
+                                <div class="lsm-val" id="lsm-mask" style="color:var(--green)">0</div>
+                                <div class="lsm-lbl">Masked</div>
+                            </div>
+                            <div class="lsm-item">
+                                <div class="lsm-val" id="lsm-nomask" style="color:var(--red)">0</div>
+                                <div class="lsm-lbl">Unmasked</div>
+                            </div>
+                            <div class="lsm-item">
+                                <div class="lsm-val" id="lsm-compliance" style="color:var(--purple)">100%</div>
+                                <div class="lsm-lbl">Compliance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="common.js"></script>
+<script src="live.js"></script>
+
+<!-- ══ CREATOR POPUP ══ -->
+<div class="creator-popup-overlay" id="creator-popup-overlay">
+    <div class="creator-popup">
+        <div class="creator-popup-glow"></div>
+        <button class="creator-popup-close" id="creator-popup-close" title="Close">✕</button>
+        <div class="creator-popup-eye">
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="pg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00F5FF"/><stop offset="100%" stop-color="#7C3AED"/></linearGradient>
+                    <linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00F5FF" stop-opacity="0.35"/><stop offset="100%" stop-color="#7C3AED" stop-opacity="0.35"/></linearGradient>
+                    <filter id="pglow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                </defs>
+                <circle cx="30" cy="30" r="28" stroke="url(#pg1)" stroke-width="1.2" opacity="0.35"/>
+                <g class="popup-eye-blink">
+                    <path d="M5 30 C12 16, 48 16, 55 30 C48 44, 12 44, 5 30 Z" fill="url(#pg2)" stroke="url(#pg1)" stroke-width="1.4"/>
+                    <circle cx="30" cy="30" r="11" stroke="url(#pg1)" stroke-width="1.6" fill="rgba(0,212,255,0.07)" filter="url(#pglow)"/>
+                    <circle cx="30" cy="30" r="7.5" stroke="url(#pg1)" stroke-width="1" fill="none" opacity="0.55"/>
+                    <circle cx="30" cy="30" r="4.5" fill="url(#pg1)" filter="url(#pglow)"/>
+                    <circle cx="33.5" cy="26.5" r="2" fill="white" opacity="0.9"/>
+                    <circle cx="27.5" cy="33" r="0.9" fill="white" opacity="0.4"/>
+                </g>
+                <line x1="5" y1="30" x2="11" y2="30" stroke="#00F5FF" stroke-width="1.4" opacity="0.7"/>
+                <line x1="49" y1="30" x2="55" y2="30" stroke="#00F5FF" stroke-width="1.4" opacity="0.7"/>
+            </svg>
+        </div>
+        <div class="creator-popup-label">PDX AI · Built By</div>
+        <div class="creator-popup-title">Pankaj Dhiman</div>
+        <div class="creator-popup-role">AI Engineer · Full Stack Developer</div>
+        <div class="creator-popup-divider"></div>
+        <div class="creator-popup-badges">
+            <span class="creator-badge-pill cyan">YOLOv8</span>
+            <span class="creator-badge-pill purple">Computer Vision</span>
+            <span class="creator-badge-pill green">Real-Time AI</span>
+        </div>
+        <div class="creator-popup-label" style="font-size:0.58rem; opacity:0.5; letter-spacing:0.15em;">Crowd Counting &amp; Face Mask Detection System</div>
+    </div>
+</div>
+<script>
+(function() {
+    var overlay = document.getElementById('creator-popup-overlay');
+    var closeBtn = document.getElementById('creator-popup-close');
+    var brandIcon = document.querySelector('.brand-icon');
+    function openPopup() { overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closePopup() { overlay.classList.remove('active'); document.body.style.overflow = ''; }
+    if (brandIcon) brandIcon.addEventListener('click', openPopup);
+    if (closeBtn)  closeBtn.addEventListener('click', closePopup);
+    if (overlay)   overlay.addEventListener('click', function(e) { if (e.target === overlay) closePopup(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup(); });
+})();
+</script>
+</body>
+</html>
+</html>

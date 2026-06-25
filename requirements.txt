@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+opencv-python
+numpy
+ultralytics
+huggingface_hub
+python-multipart
+websockets
+torch
+torchvision

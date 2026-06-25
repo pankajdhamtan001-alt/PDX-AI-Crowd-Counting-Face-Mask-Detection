@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Analytics — PDX AI</title>
+    <meta name="description" content="PDX AI — Historical compliance audits, trend analysis and safety metrics.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="scanlines"></div>
+
+<div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="eyeGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00F5FF"/><stop offset="100%" stop-color="#7C3AED"/></linearGradient>
+                        <linearGradient id="eyeGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00F5FF" stop-opacity="0.3"/><stop offset="100%" stop-color="#7C3AED" stop-opacity="0.3"/></linearGradient>
+                        <filter id="eyeGlow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                        <filter id="pupilGlow"><feGaussianBlur stdDeviation="1" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    </defs>
+                    <circle cx="20" cy="20" r="18" stroke="url(#eyeGrad1)" stroke-width="1.2" opacity="0.4"/>
+                    <g class="eye-inner" style="transform-box:fill-box;transform-origin:center;animation:eyeBlinkDouble 5s ease-in-out infinite;">
+                        <path d="M4 20 C9 11, 31 11, 36 20 C31 29, 9 29, 4 20 Z" fill="url(#eyeGrad2)" stroke="url(#eyeGrad1)" stroke-width="1.2"/>
+                        <circle cx="20" cy="20" r="7" stroke="url(#eyeGrad1)" stroke-width="1.4" fill="rgba(0,212,255,0.07)" filter="url(#eyeGlow)"/>
+                        <circle cx="20" cy="20" r="5" stroke="url(#eyeGrad1)" stroke-width="0.8" fill="none" opacity="0.6"/>
+                        <circle cx="20" cy="20" r="3" fill="url(#eyeGrad1)" filter="url(#pupilGlow)"/>
+                        <circle cx="22" cy="18" r="1.2" fill="white" opacity="0.85"/>
+                        <circle cx="18.5" cy="21.5" r="0.5" fill="white" opacity="0.4"/>
+                    </g>
+                    <line x1="4" y1="20" x2="8" y2="20" stroke="#00F5FF" stroke-width="1.2" opacity="0.7"/>
+                    <line x1="32" y1="20" x2="36" y2="20" stroke="#00F5FF" stroke-width="1.2" opacity="0.7"/>
+                    <line x1="14" y1="11.5" x2="14" y2="13.5" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="20" y1="10" x2="20" y2="12" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="26" y1="11.5" x2="26" y2="13.5" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="brand-text"><div class="brand-name">PDX AI</div><div class="brand-sub">Crowd &amp; Mask Detection</div></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-group-label">MAIN MODULES</div>
+            <a class="nav-item" href="index.html"><div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg></div><span class="nav-label">Dashboard</span><div class="nav-indicator"></div></a>
+            <a class="nav-item" href="live.html"><div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div><span class="nav-label">Live Camera</span><div class="nav-indicator"></div></a>
+            <a class="nav-item" href="upload.html"><div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><span class="nav-label">Upload & Scan</span><div class="nav-indicator"></div></a>
+            <a class="nav-item" href="analytics.html"><div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><span class="nav-label">Deep Analytics</span><div class="nav-indicator"></div></a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="server-status-card">
+                <div class="server-status-top"><div class="status-orb" id="status-orb"></div><span class="status-label" id="api-status-text">Connecting...</span></div>
+                <div class="status-bar-wrap"><div class="status-bar-fill"></div></div>
+            </div>
+            <div class="created-by-badge">
+                <span class="created-by-dot"></span>
+                <span class="created-by-text">Created by <strong>Pankaj Dhiman</strong></span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-area">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="page-title">Deep Analytics</h1>
+                <div class="breadcrumb">Historical · Audit Logs & Safety Trends</div>
+            </div>
+            <div class="topbar-right">
+                <button class="btn btn-outline btn-sm" id="btn-reset-analytics">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.51"/></svg>
+                    Reset Records
+                </button>
+                <div class="time-display" id="time-display">--:--:--</div>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <!-- SUMMARY STAT STRIP -->
+            <div class="analytics-stat-strip">
+                <div class="ast-card ast-blue">
+                    <div class="ast-val" id="ast-total-scans">0</div>
+                    <div class="ast-lbl">Total Scans</div>
+                </div>
+                <div class="ast-card ast-green">
+                    <div class="ast-val" id="ast-avg-compliance">100%</div>
+                    <div class="ast-lbl">Avg Compliance</div>
+                </div>
+                <div class="ast-card ast-red">
+                    <div class="ast-val" id="ast-critical">0</div>
+                    <div class="ast-lbl">Critical Events</div>
+                </div>
+                <div class="ast-card ast-amber">
+                    <div class="ast-val" id="ast-warnings">0</div>
+                    <div class="ast-lbl">Warnings</div>
+                </div>
+                <div class="ast-card ast-purple">
+                    <div class="ast-val" id="ast-peak-crowd">0</div>
+                    <div class="ast-lbl">Peak Crowd</div>
+                </div>
+            </div>
+
+            <!-- CHARTS -->
+            <div class="analytics-charts">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <div class="card-title-group"><div class="card-dot green"></div><h3>Mask Usage Distribution</h3></div>
+                    </div>
+                    <div class="chart-area short"><canvas id="complianceDistributionChart"></canvas></div>
+                </div>
+                <div class="glass-card">
+                    <div class="card-header">
+                        <div class="card-title-group"><div class="card-dot blue"></div><h3>Crowd Density History</h3></div>
+                    </div>
+                    <div class="chart-area short"><canvas id="densityChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- COMPLIANCE TREND CHART -->
+            <div class="glass-card chart-card" style="margin-bottom:1.4rem;">
+                <div class="card-header">
+                    <div class="card-title-group"><div class="card-dot cyan"></div><h3>Compliance Rate Over Time</h3></div>
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-dot green"></span>Compliance %</span>
+                        <span class="legend-item"><span class="legend-dot red"></span>Violations</span>
+                    </div>
+                </div>
+                <div class="chart-area"><canvas id="complianceTrendChart"></canvas></div>
+            </div>
+
+            <!-- AUDIT TABLE -->
+            <div class="glass-card audit-card">
+                <div class="card-header">
+                    <div class="card-title-group"><div class="card-dot cyan"></div><h3>Detailed Audit Logs</h3></div>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <span class="meta-chip" id="log-count-badge">0 records</span>
+                        <button class="btn btn-sm btn-outline" id="btn-export-audit-csv">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="neo-table-wrap" style="max-height:380px;">
+                    <table class="neo-table" id="audit-log-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Source</th>
+                                <th>People</th>
+                                <th>Compliance</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-log-body">
+                            <tr><td colspan="5" class="empty-row">No audit records yet. Run a scan or start the live feed.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="common.js"></script>
+<script src="analytics.js"></script>
+
+<!-- ══ CREATOR POPUP ══ -->
+<div class="creator-popup-overlay" id="creator-popup-overlay">
+    <div class="creator-popup">
+        <div class="creator-popup-glow"></div>
+        <button class="creator-popup-close" id="creator-popup-close" title="Close">✕</button>
+        <div class="creator-popup-eye">
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="pg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00F5FF"/><stop offset="100%" stop-color="#7C3AED"/></linearGradient>
+                    <linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00F5FF" stop-opacity="0.35"/><stop offset="100%" stop-color="#7C3AED" stop-opacity="0.35"/></linearGradient>
+                    <filter id="pglow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                </defs>
+                <circle cx="30" cy="30" r="28" stroke="url(#pg1)" stroke-width="1.2" opacity="0.35"/>
+                <g class="popup-eye-blink">
+                    <path d="M5 30 C12 16, 48 16, 55 30 C48 44, 12 44, 5 30 Z" fill="url(#pg2)" stroke="url(#pg1)" stroke-width="1.4"/>
+                    <circle cx="30" cy="30" r="11" stroke="url(#pg1)" stroke-width="1.6" fill="rgba(0,212,255,0.07)" filter="url(#pglow)"/>
+                    <circle cx="30" cy="30" r="7.5" stroke="url(#pg1)" stroke-width="1" fill="none" opacity="0.55"/>
+                    <circle cx="30" cy="30" r="4.5" fill="url(#pg1)" filter="url(#pglow)"/>
+                    <circle cx="33.5" cy="26.5" r="2" fill="white" opacity="0.9"/>
+                    <circle cx="27.5" cy="33" r="0.9" fill="white" opacity="0.4"/>
+                </g>
+                <line x1="5" y1="30" x2="11" y2="30" stroke="#00F5FF" stroke-width="1.4" opacity="0.7"/>
+                <line x1="49" y1="30" x2="55" y2="30" stroke="#00F5FF" stroke-width="1.4" opacity="0.7"/>
+            </svg>
+        </div>
+        <div class="creator-popup-label">PDX AI · Built By</div>
+        <div class="creator-popup-title">Pankaj Dhiman</div>
+        <div class="creator-popup-role">AI Engineer · Full Stack Developer</div>
+        <div class="creator-popup-divider"></div>
+        <div class="creator-popup-badges">
+            <span class="creator-badge-pill cyan">YOLOv8</span>
+            <span class="creator-badge-pill purple">Computer Vision</span>
+            <span class="creator-badge-pill green">Real-Time AI</span>
+        </div>
+        <div class="creator-popup-label" style="font-size:0.58rem; opacity:0.5; letter-spacing:0.15em;">Crowd Counting &amp; Face Mask Detection System</div>
+    </div>
+</div>
+<script>
+(function() {
+    var overlay = document.getElementById('creator-popup-overlay');
+    var closeBtn = document.getElementById('creator-popup-close');
+    var brandIcon = document.querySelector('.brand-icon');
+    function openPopup() { overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closePopup() { overlay.classList.remove('active'); document.body.style.overflow = ''; }
+    if (brandIcon) brandIcon.addEventListener('click', openPopup);
+    if (closeBtn)  closeBtn.addEventListener('click', closePopup);
+    if (overlay)   overlay.addEventListener('click', function(e) { if (e.target === overlay) closePopup(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — PDX AI</title>
+    <meta name="description" content="PDX AI — Real-time AI crowd counting and face mask compliance dashboard.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="scanlines"></div>
+
+<div class="app-shell">
+
+    <!-- ═══════════ SIDEBAR ═══════════ -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="eyeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00F5FF"/>
+                            <stop offset="100%" stop-color="#7C3AED"/>
+                        </linearGradient>
+                        <linearGradient id="eyeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00F5FF" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.3"/>
+                        </linearGradient>
+                        <filter id="eyeGlow">
+                            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="pupilGlow">
+                            <feGaussianBlur stdDeviation="1" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+                    <!-- Outer glow ring -->
+                    <circle cx="20" cy="20" r="18" stroke="url(#eyeGrad1)" stroke-width="1.2" opacity="0.4"/>
+                    <!-- Main eye group with blink animation -->
+                    <g class="eye-inner" style="transform-box:fill-box;transform-origin:center;animation:eyeBlinkDouble 5s ease-in-out infinite;">
+                        <!-- Eye whites / sclera shape -->
+                        <path d="M4 20 C9 11, 31 11, 36 20 C31 29, 9 29, 4 20 Z" fill="url(#eyeGrad2)" stroke="url(#eyeGrad1)" stroke-width="1.2"/>
+                        <!-- Iris outer ring -->
+                        <circle cx="20" cy="20" r="7" stroke="url(#eyeGrad1)" stroke-width="1.4" fill="rgba(0,212,255,0.07)" filter="url(#eyeGlow)"/>
+                        <!-- Iris mid ring -->
+                        <circle cx="20" cy="20" r="5" stroke="url(#eyeGrad1)" stroke-width="0.8" fill="none" opacity="0.6"/>
+                        <!-- Pupil -->
+                        <circle cx="20" cy="20" r="3" fill="url(#eyeGrad1)" filter="url(#pupilGlow)"/>
+                        <!-- Highlight sparkle -->
+                        <circle cx="22" cy="18" r="1.2" fill="white" opacity="0.85"/>
+                        <circle cx="18.5" cy="21.5" r="0.5" fill="white" opacity="0.4"/>
+                    </g>
+                    <!-- Corner scan lines -->
+                    <line x1="4" y1="20" x2="8" y2="20" stroke="#00F5FF" stroke-width="1.2" opacity="0.7"/>
+                    <line x1="32" y1="20" x2="36" y2="20" stroke="#00F5FF" stroke-width="1.2" opacity="0.7"/>
+                    <!-- Top/bottom eyelash accents -->
+                    <line x1="14" y1="11.5" x2="14" y2="13.5" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="20" y1="10" x2="20" y2="12" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="26" y1="11.5" x2="26" y2="13.5" stroke="#00F5FF" stroke-width="0.8" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <div class="brand-name">PDX AI</div>
+                <div class="brand-sub">Crowd &amp; Mask Detection</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-group-label">MAIN MODULES</div>
+            <a class="nav-item" href="index.html">
+                <div class="nav-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/>
+                        <rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>
+                    </svg>
+                </div>
+                <span class="nav-label">Dashboard</span>
+                <div class="nav-indicator"></div>
+            </a>
+            <a class="nav-item" href="live.html">
+                <div class="nav-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+                    </svg>
+                </div>
+                <span class="nav-label">Live Camera</span>
+                <div class="nav-indicator"></div>
+            </a>
+            <a class="nav-item" href="upload.html">
+                <div class="nav-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                </div>
+                <span class="nav-label">Upload & Scan</span>
+                <div class="nav-indicator"></div>
+            </a>
+            <a class="nav-item" href="analytics.html">
+                <div class="nav-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <span class="nav-label">Deep Analytics</span>
+                <div class="nav-indicator"></div>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="server-status-card">
+                <div class="server-status-top">
+                    <div class="status-orb" id="status-orb"></div>
+                    <span class="status-label" id="api-status-text">Connecting...</span>
+                </div>
+                <div class="status-bar-wrap">
+                    <div class="status-bar-fill"></div>
+                </div>
+            </div>
+            <div class="created-by-badge">
+                <span class="created-by-dot"></span>
+                <span class="created-by-text">Created by <strong>Pankaj Dhiman</strong></span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ═══════════ MAIN ═══════════ -->
+    <main class="main-area">
+
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="page-title">Analytics Dashboard</h1>
+                <div class="breadcrumb">Overview · Real-time monitoring</div>
+            </div>
+            <div class="topbar-right">
+                <div class="live-chip"><span class="chip-dot"></span><span>LIVE FEED</span></div>
+                <div class="time-display" id="time-display">--:--:--</div>
+            </div>
+        </header>
+
+        <!-- ── KPI CARDS ── -->
+        <div class="page-content">
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-bg-glow"></div>
+                    <div class="kpi-top">
+                        <div class="kpi-tag">CROWD COUNT</div>
+                        <div class="kpi-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="val-crowd">0</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-sub">Total detected persons</span>
+                        <div class="kpi-sparkbar"><div class="spark-fill" id="spark-crowd" style="width:0%"></div></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-bg-glow"></div>
+                    <div class="kpi-top">
+                        <div class="kpi-tag">WEARING MASK</div>
+                        <div class="kpi-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="val-mask">0</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-sub">Compliance detected</span>
+                        <div class="kpi-sparkbar"><div class="spark-fill" id="spark-mask" style="width:0%"></div></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card kpi-red">
+                    <div class="kpi-bg-glow"></div>
+                    <div class="kpi-top">
+                        <div class="kpi-tag">NO MASK</div>
+                        <div class="kpi-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="val-nomask">0</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-sub">Protocol violations</span>
+                        <div class="kpi-sparkbar"><div class="spark-fill" id="spark-nomask" style="width:0%"></div></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card kpi-purple">
+                    <div class="kpi-bg-glow"></div>
+                    <div class="kpi-top">
+                        <div class="kpi-tag">COMPLIANCE RATE</div>
+                        <div class="kpi-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="val-compliance">100%</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-sub">Target: >75%</span>
+                        <div class="kpi-sparkbar"><div class="spark-fill" id="spark-compliance" style="width:100%"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert -->
+            <div class="alert-strip" id="compliance-alert" style="display:none;">
+                <div class="alert-pulse"></div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span id="alert-msg"><strong>ALERT:</strong> Compliance violation detected!</span>
+            </div>
+
+            <!-- Trend Chart -->
+            <div class="charts-row">
+                <div class="glass-card chart-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-dot cyan"></div>
+                            <h3>Real-Time Crowd & Compliance Trend</h3>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-dot blue"></span>Crowd</span>
+                            <span class="legend-item"><span class="legend-dot green"></span>Compliance %</span>
+                        </div>
+                    </div>
+                    <div class="chart-area"><canvas id="trendChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Bottom row -->
+            <div class="two-col-row">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <div class="card-title-group"><div class="card-dot purple"></div><h3>AI Safety Insights</h3></div>
+                    </div>
+                    <div class="insights-list" id="insights-container">
+                        <div class="insight-item insight-safe">
+                            <div class="insight-icon">✓</div>
+                            <div class="insight-body">
+                                <div class="insight-title">System Nominal</div>
+                                <div class="insight-desc">All safety guidelines maintained. Start live camera or upload media to get real-time insights.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card forecast-card">
+                    <div class="card-header">
+                        <div class="card-title-group"><div class="card-dot amber"></div><h3>Safety Forecast</h3></div>
+                    </div>
+                    <div class="forecast-body">
+                        <div class="forecast-grade-wrap">
+                            <div class="grade-ring">
+                                <div class="grade-inner">
+                                    <div class="grade-letter" id="forecast-grade">A</div>
+                                </div>
+                            </div>
+                            <div class="grade-label" id="forecast-grade-lbl">Excellent</div>
+                        </div>
+                        <div class="forecast-sep"></div>
+                        <div class="forecast-risk-wrap">
+                            <div class="risk-value" id="forecast-risk">8%</div>
+                            <div class="risk-label">Breach Risk Index</div>
+                            <div class="risk-tag" id="forecast-risk-lbl">Low Threat</div>
+                        </div>
+                    </div>
+                    <div class="forecast-note">* Based on sliding-window temporal analysis</div>
+                </div>
+            </div>
+
+            <!-- Quick-action nav cards -->
+            <div class="quick-nav-row">
+                <a href="live.html" class="quick-nav-card glass-card qn-blue">
+                    <div class="qn-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+                        </svg>
+                    </div>
+                    <div class="qn-text">
+                        <div class="qn-title">Live Camera</div>
+                        <div class="qn-sub">Start real-time webcam analysis →</div>
+                    </div>
+                </a>
+                <a href="upload.html" class="quick-nav-card glass-card qn-purple">
+                    <div class="qn-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <div class="qn-text">
+                        <div class="qn-title">Upload & Scan</div>
+                        <div class="qn-sub">Analyze image or video file →</div>
+                    </div>
+                </a>
+                <a href="analytics.html" class="quick-nav-card glass-card qn-green">
+                    <div class="qn-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </div>
+                    <div class="qn-text">
+                        <div class="qn-title">Deep Analytics</div>
+                        <div class="qn-sub">View audit logs & trends →</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="common.js"></script>
+<script src="dashboard.js"></script>
+
+<!-- ══ CREATOR POPUP ══ -->
+<div class="creator-popup-overlay" id="creator-popup-overlay">
+    <div class="creator-popup">
+        <div class="creator-popup-glow"></div>
+        <button class="creator-popup-close" id="creator-popup-close" title="Close">✕</button>
+
+        <div class="creator-popup-eye">
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="pg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00F5FF"/>
+                        <stop offset="100%" stop-color="#7C3AED"/>
+                    </linearGradient>
+                    <linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00F5FF" stop-opacity="0.35"/>
+                        <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.35"/>
+                    </linearGradient>
+                    <filter id="pglow">
+                        <feGaussianBlur stdDeviation="2" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <circle cx="30" cy="30" r="28" stroke="url(#pg1)" stroke-width="1.2" opacity="0.35"/>
+                <g class="popup-eye-blink">
+                    <path d="M5 30 C12 16, 48 16, 55 30 C48 44, 12 44, 5 30 Z" fill="url(#pg2)" stroke="url(#pg1)" stroke-width="1.4"/>
+                    <circle cx="30" cy="30" r="11" stroke="url(#pg1)" stroke-width="1.6" fill="rgba(0,212,255,0.07)" filter="url(#pglow)"/>
+                    <circle cx="30" cy="30" r="7.5" stroke="url(#pg1)" stroke-width="1" fill="none" opacity="0.55"/>
+                    <circle cx="30" cy="30" r="4.5" fill="url(#pg1)" filter="url(#pglow)"/>
+                    <circle cx="33.5" cy="26.5" r="2" fill="white" opacity="0.9"/>
+                    <circle cx="27.5" cy="33" r="0.9" fill="white" opacity="0.4"/>
+                </g>
+                <line x1="5" y1="30" x2="11" y2="30" stroke="#00F5FF" stroke-width="1.4" opacity="0.7"/>
+                <line x1="49" y1="30" x2="55" y2="30" stroke="#00F5FF" stroke-width="1.4" opacity="0.7"/>
+            </svg>
+        </div>
+
+        <div class="creator-popup-label">PDX AI · Built By</div>
+        <div class="creator-popup-title">Pankaj Dhiman</div>
+        <div class="creator-popup-role">AI Engineer · Full Stack Developer</div>
+
+        <div class="creator-popup-divider"></div>
+
+        <div class="creator-popup-badges">
+            <span class="creator-badge-pill cyan">YOLOv8</span>
+            <span class="creator-badge-pill purple">Computer Vision</span>
+            <span class="creator-badge-pill green">Real-Time AI</span>
+        </div>
+
+        <div class="creator-popup-label" style="font-size:0.58rem; opacity:0.5; letter-spacing:0.15em;">
+            Crowd Counting &amp; Face Mask Detection System
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var overlay = document.getElementById('creator-popup-overlay');
+    var closeBtn = document.getElementById('creator-popup-close');
+    var brandIcon = document.querySelector('.brand-icon');
+
+    function openPopup() {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closePopup() {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (brandIcon) brandIcon.addEventListener('click', openPopup);
+    if (closeBtn)  closeBtn.addEventListener('click', closePopup);
+    if (overlay)   overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closePopup();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closePopup();
+    });
+})();
+</script>
+</body>
+</html>
